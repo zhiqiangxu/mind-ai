@@ -15,6 +15,11 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# tauri-action needs to create a GitHub Release and upload assets to it.
+# The default GITHUB_TOKEN is read-only for contents; grant write permission here.
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
