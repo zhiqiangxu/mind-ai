@@ -1,5 +1,7 @@
 # Mind AI
 
+English | [简体中文](README.zh-CN.md)
+
 A mind-map style AI exploration tool. Ask a question, get an answer as a node, then branch off with follow-ups — your conversation becomes a tree, not a chat log.
 
 Built for non-linear thinking: research, learning, exploring a topic from multiple angles. Local-first — your data stays on your machine.
