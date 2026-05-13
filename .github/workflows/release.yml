@@ -1,0 +1,79 @@
+name: Release
+
+# Trigger: push a tag like `v0.1.0` and this workflow builds .dmg and .msi/.exe,
+# then attaches them to a GitHub Release (as a draft you can review before publishing).
+#
+# Usage:
+#   git tag v0.1.0
+#   git push origin v0.1.0
+#
+# You can also trigger manually from the Actions tab via "Run workflow".
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS universal binary (Intel + Apple Silicon in one .dmg)
+          - platform: 'macos-latest'
+            args: '--target universal-apple-darwin'
+            rust-targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          # Windows x64
+          - platform: 'windows-latest'
+            args: ''
+            rust-targets: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+
+      - name: Cache Rust build
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build & release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Mind AI ${{ github.ref_name }}'
+          releaseBody: |
+            ## Downloads
+
+            - **macOS**: `Mind AI_*.dmg` (universal — works on both Intel and Apple Silicon)
+            - **Windows**: `Mind AI_*-setup.exe` or `Mind AI_*.msi`
+
+            ## Install notes
+
+            **macOS**: the app isn't notarized yet, so on first open right-click → Open and confirm.
+            **Windows**: SmartScreen may warn — click "More info" → "Run anyway".
+
+            See the [README](https://github.com/${{ github.repository }}/blob/main/README.md) for setup (API key configuration etc.).
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}

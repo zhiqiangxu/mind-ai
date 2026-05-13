@@ -1,0 +1,348 @@
+:root {
+  --bg: #fafafa;
+  --canvas-bg: #f4f4f5;
+  --root-bg: #1f2937;
+  --root-fg: #ffffff;
+  --a-bg: #ffffff;
+  --a-border: #e5e7eb;
+  --a-accent: #6366f1;
+  --edge-label-bg: #ffffff;
+  --edge-label-fg: #374151;
+  --edge-label-border: #d1d5db;
+  --text: #111827;
+  --muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.app-root {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* ---------- Nodes ---------- */
+.node-root {
+  background: var(--root-bg);
+  color: var(--root-fg);
+  padding: 14px 22px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  max-width: 320px;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.node-a {
+  background: var(--a-bg);
+  border: 1px solid var(--a-border);
+  border-left: 3px solid var(--a-accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 360px;
+  min-width: 140px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  user-select: none;
+  color: var(--text);
+  position: relative;
+  /* No scroll here — handle is absolute-positioned inside, scrolling would carry handle with content */
+}
+
+.node-a .a-content {
+  max-height: 440px;
+  overflow-y: auto;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+.node-a .a-content::-webkit-scrollbar {
+  width: 8px;
+}
+.node-a .a-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.node-a .a-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.node-a .a-content::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.45);
+  background-clip: padding-box;
+}
+
+.node-a.streaming {
+  border-left-color: #10b981;
+}
+
+.node-a .a-content {
+  word-break: break-word;
+}
+
+.node-a .a-content p {
+  margin: 0 0 6px 0;
+}
+
+.node-a .a-content p:last-child {
+  margin-bottom: 0;
+}
+
+.node-a .a-content pre {
+  background: #f3f4f6;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+
+.node-a .a-content code {
+  font-family: 'JetBrains Mono', Menlo, monospace;
+  font-size: 12px;
+}
+
+.node-a .a-content :not(pre) > code {
+  background: #f3f4f6;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.node-a .a-content ul,
+.node-a .a-content ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.node-actions {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: none;
+  gap: 4px;
+}
+
+.node-root:hover .node-actions,
+.node-a:hover .node-actions {
+  display: flex;
+}
+
+.node-add-btn,
+.node-del-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  line-height: 1;
+  padding: 0;
+}
+
+.node-add-btn {
+  background: var(--a-accent);
+}
+
+.node-add-btn:hover {
+  background: #4f46e5;
+}
+
+.node-del-btn {
+  background: #ef4444;
+  font-size: 12px;
+}
+
+.node-del-btn:hover {
+  background: #dc2626;
+}
+
+.node-regen-btn {
+  margin-top: 8px;
+  padding: 4px 10px;
+  background: var(--a-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.node-regen-btn:hover {
+  background: #4f46e5;
+}
+
+/* React Flow selection feedback */
+.react-flow__node.selected .node-root,
+.react-flow__node.selected .node-a {
+  box-shadow:
+    0 0 0 2px var(--a-accent),
+    0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+/* ---------- Edge label ---------- */
+.react-flow .edge-label {
+  background: var(--edge-label-bg) !important;
+  border: 1px solid var(--edge-label-border) !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  color: var(--edge-label-fg) !important;
+  max-width: 320px !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+  pointer-events: all !important;
+  font-weight: 500 !important;
+}
+
+/* ---------- Dialog (new doc) ---------- */
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.dialog h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+}
+
+.dialog p {
+  margin: 0 0 14px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.dialog textarea,
+.dialog input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.dialog textarea {
+  min-height: 80px;
+}
+
+.dialog-actions {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-primary {
+  background: var(--a-accent);
+  color: #fff;
+  border-color: var(--a-accent);
+}
+
+.btn-primary:hover {
+  background: #4f46e5;
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Inline follow-up input ---------- */
+.followup-wrap {
+  background: #fff;
+  border: 2px solid var(--a-accent);
+  border-radius: 8px;
+  padding: 8px;
+  width: 280px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.followup-wrap textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 13px;
+  font-family: inherit;
+  min-height: 50px;
+  padding: 0;
+}
+
+.followup-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* React Flow override */
+.react-flow__attribution {
+  display: none;
+}
