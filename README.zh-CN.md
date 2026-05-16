@@ -18,7 +18,7 @@
 
 ## 安装
 
-预编译版本（如有）在 [Releases](https://github.com/zhiqiangxu/mind-ai/releases) 页面。
+预编译版本在 [Releases](https://github.com/zhiqiangxu/mind-ai/releases) 页面。
 
 ## 从源码构建
 

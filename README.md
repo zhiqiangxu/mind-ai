@@ -18,7 +18,7 @@ Built for non-linear thinking: research, learning, exploring a topic from multip
 
 ## Install
 
-Pre-built binaries (when available) are on the [Releases](https://github.com/zhiqiangxu/mind-ai/releases) page.
+Pre-built binaries are on the [Releases](https://github.com/zhiqiangxu/mind-ai/releases) page.
 
 ## Build from source
 
