@@ -64,8 +64,6 @@ interface Pos {
 
 interface SideLayout {
   nodes: Map<NodeId, Pos>;
-  /** Keyed by `${sourceId}->${targetId}` (React Flow edge id format). */
-  edgeLabels: Map<string, Pos>;
 }
 
 function collectSubtree(rootChildId: NodeId, nodes: Record<NodeId, MindNode>): NodeId[] {
@@ -93,7 +91,7 @@ async function layoutOneSide(
     for (const id of collectSubtree(cid, nodes)) allIds.add(id);
   }
 
-  if (allIds.size === 0) return { nodes: new Map(), edgeLabels: new Map() };
+  if (allIds.size === 0) return { nodes: new Map() };
 
   const VIRTUAL = '__side_root__';
   const elkChildren = [
@@ -146,10 +144,6 @@ async function layoutOneSide(
 
   const result = (await elk.layout(graph)) as {
     children?: { id: string; x?: number; y?: number; width?: number; height?: number }[];
-    edges?: {
-      id: string;
-      labels?: { x?: number; y?: number; width?: number; height?: number }[];
-    }[];
   };
 
   const nodesOut = new Map<NodeId, Pos>();
@@ -161,17 +155,6 @@ async function layoutOneSide(
       height: c.height ?? 0,
     });
   }
-  const labelsOut = new Map<string, Pos>();
-  for (const e of result.edges ?? []) {
-    if (!e.labels || e.labels.length === 0) continue;
-    const lbl = e.labels[0];
-    labelsOut.set(e.id, {
-      x: lbl.x ?? 0,
-      y: lbl.y ?? 0,
-      width: lbl.width ?? 0,
-      height: lbl.height ?? 0,
-    });
-  }
 
   // Normalize so virtual side root is at (0,0)
   const vp = nodesOut.get(VIRTUAL);
@@ -179,10 +162,6 @@ async function layoutOneSide(
     for (const p of nodesOut.values()) {
       p.x -= vp.x;
       p.y -= vp.y;
-    }
-    for (const l of labelsOut.values()) {
-      l.x -= vp.x;
-      l.y -= vp.y;
     }
   }
   nodesOut.delete(VIRTUAL);
@@ -197,18 +176,13 @@ async function layoutOneSide(
   if (isFinite(minY) && isFinite(maxY)) {
     const shiftY = -(minY + maxY) / 2;
     for (const p of nodesOut.values()) p.y += shiftY;
-    for (const l of labelsOut.values()) l.y += shiftY;
   }
 
-  return { nodes: nodesOut, edgeLabels: labelsOut };
+  return { nodes: nodesOut };
 }
 
 function mirrorXNode(p: Pos) {
   p.x = -p.x - p.width;
-}
-function mirrorXLabel(l: Pos) {
-  // For a label box with given top-left x and width, mirror across x=0
-  l.x = -l.x - l.width;
 }
 
 export interface LayoutResult {
@@ -250,9 +224,8 @@ export async function layoutBalanced(
     layoutOneSide(rootId, rightChildren, nodes, sizeOf),
   ]);
 
-  // Mirror left side nodes and labels
+  // Mirror left side nodes
   for (const p of left.nodes.values()) mirrorXNode(p);
-  for (const l of left.edgeLabels.values()) mirrorXLabel(l);
 
   const outNodes: Node[] = [];
   const outEdges: Edge[] = [];
@@ -297,25 +270,6 @@ export async function layoutBalanced(
     });
   }
 
-  // Combined label position map keyed by RF edge id, with side offsets applied.
-  const labelPositions = new Map<string, { x: number; y: number; width: number; height: number }>();
-  for (const [edgeId, l] of right.edgeLabels) {
-    labelPositions.set(edgeId, {
-      x: l.x + rightOffsetX,
-      y: l.y,
-      width: l.width,
-      height: l.height,
-    });
-  }
-  for (const [edgeId, l] of left.edgeLabels) {
-    labelPositions.set(edgeId, {
-      x: l.x + leftOffsetX,
-      y: l.y,
-      width: l.width,
-      height: l.height,
-    });
-  }
-
   // Root → side child edges (no label)
   for (const cid of rightChildren) {
     outEdges.push({
@@ -349,20 +303,12 @@ export async function layoutBalanced(
     for (const cid of n.childrenIds) {
       const c = nodes[cid];
       if (!c || c.kind !== 'A' || !subtreeIds.has(cid)) continue;
-      const edgeId = `${id}->${cid}`;
-      const labelPos = labelPositions.get(edgeId);
       outEdges.push({
-        id: edgeId,
+        id: `${id}->${cid}`,
         source: id,
         target: cid,
         type: 'q',
-        data: {
-          label: c.parentEdgeLabel,
-          // Center of label box (for QEdge to position the rendered chip)
-          labelPos: labelPos
-            ? { x: labelPos.x + labelPos.width / 2, y: labelPos.y + labelPos.height / 2 }
-            : undefined,
-        },
+        data: { label: c.parentEdgeLabel },
         sourceHandle: 's',
         targetHandle: 't',
       });
@@ -403,13 +349,6 @@ export async function layoutMultiRoot(
     const shift = cursorY - minY;
     for (const n of tree.nodes) {
       n.position = { x: n.position.x, y: n.position.y + shift };
-    }
-    // Edges' label positions are in the same coord system as nodes — shift too
-    for (const e of tree.edges) {
-      const lp = (e.data as { labelPos?: { x: number; y: number } } | undefined)?.labelPos;
-      if (lp) {
-        lp.y += shift;
-      }
     }
     allNodes.push(...tree.nodes);
     allEdges.push(...tree.edges);

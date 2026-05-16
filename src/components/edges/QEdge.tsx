@@ -7,7 +7,6 @@ import {
 
 interface QEdgeData {
   label?: string;
-  labelPos?: { x: number; y: number };
 }
 
 export function QEdge({
@@ -21,7 +20,7 @@ export function QEdge({
   data,
   markerEnd,
 }: EdgeProps) {
-  const [edgePath, pathLabelX, pathLabelY] = getSmoothStepPath({
+  const [edgePath] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -33,9 +32,13 @@ export function QEdge({
 
   const d = data as QEdgeData | undefined;
   const label = d?.label ?? '';
-  // Prefer elkjs-computed label position; fall back to path midpoint
-  const labelX = d?.labelPos?.x ?? pathLabelX;
-  const labelY = d?.labelPos?.y ?? pathLabelY;
+
+  // Place the label on the final horizontal segment going into the target —
+  // the part unique to this edge — instead of the shared vertical trunk that
+  // siblings overlap on. Midpoint between the bend (midX) and targetX, at targetY.
+  const midX = (sourceX + targetX) / 2;
+  const labelX = (midX + targetX) / 2;
+  const labelY = targetY;
 
   return (
     <>
